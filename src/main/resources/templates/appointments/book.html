@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Appointment Booking</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+</head>
+<body class="container mt-4">
+
+<h2 class="text-center mb-4">Book Appointment</h2>
+
+<!-- Appointment Form -->
+<div class="card p-4 shadow-sm mb-4">
+    <form th:action="@{/appointments/book}" method="post">
+
+        <div class="mb-3">
+            <label class="form-label">Patient</label>
+            <select name="patientId" class="form-select" required>
+                <option value="">-- Select Patient --</option>
+                <option th:each="p : ${patients}"
+                        th:value="${p.id}"
+                th:text="${p.name}">
+                </option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Doctor</label>
+            <select name="doctorId" class="form-select" required>
+                <option value="">-- Select Doctor --</option>
+                <option th:each="d : ${doctors}"
+                        th:value="${d.id}"
+                th:text="${d.name + ' (' + d.specialization + ')'}">
+                </option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Date & Time</label>
+            <input type="datetime-local" name="dateTime" class="form-control" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100">Book Appointment</button>
+    </form>
+</div>
+
+<!-- Appointments List -->
+<h3 class="text-center mb-3">All Appointments</h3>
+
+<div th:if="${#lists.isEmpty(appointments)}" class="alert alert-info text-center">
+    No appointments booked yet.
+</div>
+
+<table th:if="${!#lists.isEmpty(appointments)}"
+       class="table table-bordered table-striped table-hover">
+    <thead class="table-dark">
+    <tr>
+        <th>ID</th>
+        <th>Patient</th>
+        <th>Doctor</th>
+        <th>Date & Time</th>
+        <th>Status</th>
+        <th>Actions</th> <!-- New Column -->
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="a : ${appointments}">
+        <td th:text="${a.appointmentId}"></td>
+        <td th:text="${a.patient.name}"></td>
+        <td th:text="${a.doctor.name + ' (' + a.doctor.specialization + ')'}"></td>
+        <td th:text="${a.appointmentDateTime}"></td>
+        <td>
+            <span th:classappend="${a.appointmentStatus == 'CONFIRMED'} ? 'badge bg-success'
+                          : (${a.appointmentStatus == 'PENDING'} ? 'badge bg-warning'
+                          : (${a.appointmentStatus == 'COMPLETED'} ? 'badge bg-primary'
+                          : 'badge bg-danger'))"
+                  th:text="${a.appointmentStatus}">
+            </span>
+        </td>
+        <td>
+            <!-- Complete button (only if status is CONFIRMED or PENDING) -->
+            <form th:action="@{/appointments/complete/{id}(id=${a.appointmentId})}"
+                  method="post" th:if="${a.appointmentStatus == 'CONFIRMED' or a.appointmentStatus == 'PENDING'}"
+                  style="display:inline">
+                <button type="submit" class="btn btn-sm btn-success">Complete</button>
+            </form>
+
+            <!-- Cancel button (only if not already cancelled/completed) -->
+            <form th:action="@{/appointments/cancel/{id}(id=${a.appointmentId})}"
+                  method="post" th:if="${a.appointmentStatus != 'CANCELLED' and a.appointmentStatus != 'COMPLETED'}"
+                  style="display:inline">
+                <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
