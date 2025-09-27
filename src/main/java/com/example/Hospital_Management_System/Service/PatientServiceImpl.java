@@ -17,6 +17,9 @@ public class PatientServiceImpl implements PatientService{
         this.patientRepository = patientRepository;
     }
 
+    public Patient getPatientByEmail(String email) {
+        return patientRepository.findByEmail(email).orElse(null);
+    }
     public Patient addPatient(Patient patient) {
         return patientRepository.save(patient);
     }

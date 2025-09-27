@@ -20,6 +20,9 @@ public class Patient {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(unique = true, nullable = false)
+    private String email;
+
     @NotBlank(message = "Name is required")
     private String name;
 
