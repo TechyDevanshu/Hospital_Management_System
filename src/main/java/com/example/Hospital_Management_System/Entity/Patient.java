@@ -28,7 +28,7 @@ public class Patient {
     private String name;
 
     @DateTimeFormat(pattern = "yyyy-MM-dd")
-    @Past(message = "Date of Birth must be in the past")
+    @PastOrPresent(message = "Date of Birth must be today or in the past")
     private LocalDate dateOfBirth;
 
     private String address;

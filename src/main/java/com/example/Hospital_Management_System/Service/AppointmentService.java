@@ -31,6 +31,10 @@ public class AppointmentService {
 
         Doctor doctor = doctorRepository.findById(doctorId).orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
 
+        if(!doctor.getAvailabilityStatus()){
+            throw new RuntimeException("Doctor is not available at the moment. Please choose another doctor.");
+        }
+
         if (!appointmentRepository.findByPatientAndAppointmentDateTime(patient, dateTime).isEmpty()) {
             throw new RuntimeException("Patient already has an appointment at this time");
         }

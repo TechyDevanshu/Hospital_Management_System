@@ -44,12 +44,12 @@
         <!-- Doctor -->
         <div class="mb-3">
             <label class="form-label">Doctor</label>
-            <select name="doctorId" class="form-select" required>
+            <select id="doctor" name="doctorId" class="form-select" required>
                 <option value="">-- Select Doctor --</option>
                 <option th:each="d : ${doctors}"
                         th:value="${d.id}"
-                        th:text="${d.name + ' (' + d.specialization + ')'}">
-                </option>
+                        th:text="${d.name + ' (' + d.specialization + ')'}"
+                        th:if="${d.availabilityStatus}"></option>
             </select>
             <div class="error-msg">Please select a doctor.</div>
         </div>
@@ -95,8 +95,8 @@
         <td th:text="${a.doctor.name + ' (' + a.doctor.specialization + ')'}"></td>
         <td th:text="${a.appointmentDateTime}"></td>
         <td>
-            <span th:classappend="${a.appointmentStatus == 'CONFIRMED'} ? 'badge bg-success'
-                          : (${a.appointmentStatus == 'PENDING'} ? 'badge bg-warning'
+            <span th:classappend="${a.appointmentStatus == 'BOOKED'} ? 'badge bg-success'
+                          : (${a.appointmentStatus == 'BOOKED'} ? 'badge bg-warning'
                           : (${a.appointmentStatus == 'COMPLETED'} ? 'badge bg-primary'
                           : 'badge bg-danger'))"
                   th:text="${a.appointmentStatus}">
@@ -105,17 +105,20 @@
         <td>
             <!-- Complete button -->
             <form th:action="@{/appointments/complete/{id}(id=${a.appointmentId})}"
-                  method="post" th:if="${a.appointmentStatus == 'CONFIRMED' or a.appointmentStatus == 'PENDING'}"
+                  method="post"
+                  th:if="${a.appointmentStatus == 'SCHEDULED'}"
                   style="display:inline">
                 <button type="submit" class="btn btn-sm btn-success">Complete</button>
             </form>
 
             <!-- Cancel button -->
             <form th:action="@{/appointments/cancel/{id}(id=${a.appointmentId})}"
-                  method="post" th:if="${a.appointmentStatus != 'CANCELLED' and a.appointmentStatus != 'COMPLETED'}"
+                  method="post"
+                  th:if="${a.appointmentStatus != 'CANCELLED' and a.appointmentStatus != 'COMPLETED'}"
                   style="display:inline">
                 <button type="submit" class="btn btn-sm btn-danger">Cancel</button>
             </form>
+
         </td>
     </tr>
     </tbody>
