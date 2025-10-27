@@ -18,4 +18,6 @@ public interface PatientService {
 
 
     Patient getPatientByEmail(String username);
+    boolean existsByEmail(String email);
+
 }

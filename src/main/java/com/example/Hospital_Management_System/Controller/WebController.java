@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpSession;
+
 import java.time.LocalDateTime;
 
 @Controller
@@ -27,17 +28,26 @@ public class WebController {
         this.patientService = patientService;
         this.doctorService = doctorService;
         this.appointmentService = appointmentService;
-        this.userService=userService;
+        this.userService = userService;
     }
 
     // ======= HOME / DASHBOARD =======
     @GetMapping("/")
     public String dashboard(HttpSession session) {
-        if(session.getAttribute("username") == null) {
+        if (session.getAttribute("username") == null) {
             return "home/login"; // redirect to login if not logged in
         }
         return "home/dashboard";
     }
+
+    @GetMapping("/home")
+    public String homePage(HttpSession session) {
+        if (session.getAttribute("username") == null) {
+            return "home/login"; // redirect to login if not logged in
+        }
+        return "home/dashboard"; // main home page after login
+    }
+
 
     // ======= LOGIN PAGES =======
     @GetMapping("/login")
@@ -50,7 +60,7 @@ public class WebController {
                             @RequestParam String password,
                             Model model,
                             HttpSession session) {
-        if(userService.login(username, password)) {
+        if (userService.login(username, password)) {
             session.setAttribute("username", username); // save user in session
             return "redirect:/"; // go to dashboard
         } else {
@@ -76,7 +86,7 @@ public class WebController {
                                @RequestParam String password,
                                Model model) {
         boolean success = userService.register(new User(username, password));
-        if(success) {
+        if (success) {
             model.addAttribute("message", "Registration successful! Please login.");
             return "home/login";
         } else {
@@ -88,33 +98,67 @@ public class WebController {
     // ================= PATIENT PAGES =================
     @GetMapping("/patients/register")
     public String showPatientForm(Model model, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         model.addAttribute("patient", new Patient());
         model.addAttribute("patients", patientService.getAllPatients());
+
+        model.addAttribute("today", java.time.LocalDate.now());
         return "patients/register";
     }
 
     @PostMapping("/patients/save")
-    public String savePatient(@ModelAttribute Patient patient, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+    public String savePatient(@ModelAttribute Patient patient, HttpSession session, Model model) {
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
+        boolean hasError = false;
+
+        // Check if email already exists
+        if (patientService.existsByEmail(patient.getEmail())) {
+            model.addAttribute("emailError", "Email already exists. Please use a different email.");
+            hasError = true;
+        }
+
+        // Check if DOB is in the future
+        if (patient.getDateOfBirth() != null && patient.getDateOfBirth().isAfter(java.time.LocalDate.now())) {
+            model.addAttribute("dobError", "Date of birth cannot be in the future.");
+
+            hasError = true;
+        }
+
+        if (hasError) {
+            model.addAttribute("patient", patient); // Keep entered form data
+
+            // Add today's date for DOB max restriction
+            model.addAttribute("today", java.time.LocalDate.now());
+
+            return "patients/register"; // Back to form
+        }
+
+
+        // Save patient if no errors
         patientService.addPatient(patient);
         return "redirect:/patients/register";
     }
 
+
     @GetMapping("/patients/edit/{id}")
     public String editPatient(@PathVariable Long id, Model model, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         model.addAttribute("patient", patientService.getPatientById(id));
         model.addAttribute("patients", patientService.getAllPatients());
+
+        // Add today's date for DOB max restriction
+        model.addAttribute("today", java.time.LocalDate.now());
+
         return "patients/register";
     }
 
+
     @PostMapping("/patients/update/{id}")
     public String updatePatient(@PathVariable Long id, @ModelAttribute Patient patient, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         patientService.updatePatient(id, patient);
         return "redirect:/patients/register";
@@ -122,7 +166,7 @@ public class WebController {
 
     @PostMapping("/patients/delete/{id}")
     public String deletePatient(@PathVariable Long id, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         patientService.deletePatient(id);
         return "redirect:/patients/register";
@@ -131,7 +175,7 @@ public class WebController {
     // ================= DOCTOR PAGES =================
     @GetMapping("/doctors/manage")
     public String showDoctorForm(Model model, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         model.addAttribute("doctor", new Doctor());
         model.addAttribute("doctors", doctorService.getAllDoctors());
@@ -140,7 +184,7 @@ public class WebController {
 
     @PostMapping("/doctors/save")
     public String saveDoctor(@ModelAttribute Doctor doctor, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         doctorService.addDoctor(doctor);
         return "redirect:/doctors/manage";
@@ -148,7 +192,7 @@ public class WebController {
 
     @GetMapping("/doctors/edit/{id}")
     public String editDoctor(@PathVariable Long id, Model model, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         model.addAttribute("doctor", doctorService.getDoctorById(id));
         model.addAttribute("doctors", doctorService.getAllDoctors());
@@ -157,7 +201,7 @@ public class WebController {
 
     @PostMapping("/doctors/update/{id}")
     public String updateDoctor(@PathVariable Long id, @ModelAttribute Doctor doctor, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         doctorService.updateDoctor(id, doctor);
         return "redirect:/doctors/manage";
@@ -165,7 +209,7 @@ public class WebController {
 
     @PostMapping("/doctors/delete/{id}")
     public String deleteDoctor(@PathVariable Long id, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         doctorService.deleteDoctor(id);
         return "redirect:/doctors/manage";
@@ -174,28 +218,45 @@ public class WebController {
     // ================= APPOINTMENT PAGES =================
     @GetMapping("/appointments/book")
     public String showAppointmentForm(Model model, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         model.addAttribute("patients", patientService.getAllPatients());
         model.addAttribute("doctors", doctorService.getAllDoctors());
         model.addAttribute("appointments", appointmentService.getAllAppointments());
+
+        // 👇 Pass current date-time in HTML datetime-local format
+        model.addAttribute("currentDateTime", LocalDateTime.now().toString().substring(0, 16));
+
         return "appointments/book";
     }
 
     @PostMapping("/appointments/book")
     public String bookAppointment(@RequestParam Long patientId,
                                   @RequestParam Long doctorId,
-                                  @RequestParam("dateTime") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime,
-                                  HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+                                  @RequestParam("dateTime")
+                                  @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTime,
+                                  HttpSession session,
+                                  Model model) {
+        if (session.getAttribute("username") == null) return "redirect:/login";
+
+        LocalDateTime now = LocalDateTime.now();
+        if (dateTime.isBefore(now)) {
+            model.addAttribute("patients", patientService.getAllPatients());
+            model.addAttribute("doctors", doctorService.getAllDoctors());
+            model.addAttribute("appointments", appointmentService.getAllAppointments());
+            model.addAttribute("dateTimeError", "Please select a future date and time.");
+            model.addAttribute("currentDateTime", now.toString().substring(0, 16));
+            return "appointments/book";
+        }
 
         appointmentService.bookAppointment(patientId, doctorId, dateTime);
         return "redirect:/appointments/book";
     }
 
+
     @PostMapping("/appointments/complete/{id}")
     public String completeAppointment(@PathVariable Long id, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         appointmentService.completeAppointment(id);
         return "redirect:/appointments/book";
@@ -203,7 +264,7 @@ public class WebController {
 
     @PostMapping("/appointments/cancel/{id}")
     public String cancelAppointment(@PathVariable Long id, HttpSession session) {
-        if(session.getAttribute("username") == null) return "redirect:/login";
+        if (session.getAttribute("username") == null) return "redirect:/login";
 
         appointmentService.cancelAppointment(id);
         return "redirect:/appointments/book";

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
@@ -26,6 +27,7 @@ public class Patient {
     @NotBlank(message = "Name is required")
     private String name;
 
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     @Past(message = "Date of Birth must be in the past")
     private LocalDate dateOfBirth;
 

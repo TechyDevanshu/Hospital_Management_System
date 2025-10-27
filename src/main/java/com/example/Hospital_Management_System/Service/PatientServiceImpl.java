@@ -20,6 +20,13 @@ public class PatientServiceImpl implements PatientService{
     public Patient getPatientByEmail(String email) {
         return patientRepository.findByEmail(email).orElse(null);
     }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return patientRepository.existsByEmail(email);
+    }
+
+
     public Patient addPatient(Patient patient) {
         return patientRepository.save(patient);
     }

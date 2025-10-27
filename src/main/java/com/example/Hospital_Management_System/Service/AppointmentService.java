@@ -53,7 +53,7 @@ public class AppointmentService {
 
     public void completeAppointment(Long appointmentId) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Appointment not fount"));
+                .orElseThrow(() -> new ResourceNotFoundException("Appointment not found"));
         appointment.setAppointmentStatus(AppointmentStatus.COMPLETED);
         appointmentRepository.save(appointment);
     }
